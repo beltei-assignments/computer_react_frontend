@@ -72,8 +72,15 @@ export default function CheckoutForm() {
       //     return_url: `${window.location.origin}/`,
       //   },
       // });
-    } catch {
+    } catch (error) {
       setLoading(false);
+      if (error.status !== 500) {
+        return notifications.show(error.response.data?.message, {
+          severity: "error",
+          autoHideDuration: 4000,
+        });
+      }
+
       notifications.show("Something went wrong while ordering", {
         severity: "error",
         autoHideDuration: 4000,

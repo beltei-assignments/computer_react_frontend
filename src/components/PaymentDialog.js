@@ -17,9 +17,7 @@ const options = {
 };
 
 export default function PaymentDialog({ openAddressDialog, onClose }) {
-  const stripePromise = loadStripe(
-    "pk_test_51Q15NwP4O8cWxLy6njmyIJX4ETLtoXcXiWN7m8SFPCiK6Ai7dzf7eAWo2bwIIBMK6V4wWfJ2aCSD8ChSpMM4TKh400ltbOloDf"
-  );
+  const stripePromise = loadStripe();
 
   async function handleSubmit(event) {
     event.preventDefault();

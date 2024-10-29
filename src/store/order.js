@@ -1,5 +1,9 @@
 import { getImageByNameAPI } from "../api/file.js";
-import { fetchOrdersAPI, deleteOrderByIdAPI } from "../api/order.js";
+import {
+  fetchOrdersAPI,
+  updateOrderByIdAPI,
+  deleteOrderByIdAPI,
+} from "../api/order.js";
 
 const Order = {
   state: {
@@ -44,6 +48,9 @@ const Order = {
       });
 
       return data;
+    },
+    async updateOrderById({ id, payload }) {
+      return updateOrderByIdAPI(id, payload);
     },
     async deleteOrderById(id) {
       return deleteOrderByIdAPI(id);

@@ -5,6 +5,7 @@ import { useDialogs } from "@toolpad/core/useDialogs";
 import { useNotifications } from "@toolpad/core/useNotifications";
 import BaseHeader from "../../components/BaseHeader.js";
 import BaseLoading from "../../components/BaseLoading.js";
+import { ORDER_STATUS, ORDER_STATUS_COLORS } from "../../constants/index.js";
 import {
   Box,
   CardMedia,
@@ -13,6 +14,7 @@ import {
   Typography,
   Card,
   Button,
+  Chip,
 } from "@mui/material";
 
 export default function CartPage() {
@@ -38,7 +40,7 @@ export default function CartPage() {
   }
   async function onRemveOrder({ id }) {
     const confirmed = await dialogs.confirm(
-      "Are you sure to remve your order?",
+      "Are you sure to remove your order?",
       {
         okText: "Yes",
         cancelText: "No",
@@ -56,6 +58,22 @@ export default function CartPage() {
       setLoading(false);
       await loadData();
     } catch {
+      setLoading(false);
+    }
+  }
+  async function confirmReceived({ id }) {
+    try {
+      setLoading(true);
+      await dispatch.Order.updateOrderById({
+        id,
+        payload: { status: ORDER_STATUS.RECEIVED },
+      });
+      setLoading(false);
+      await loadData();
+      await dispatch.User.fetchUser();
+    } catch (e) {
+      console.log(e);
+
       setLoading(false);
     }
   }
@@ -82,7 +100,7 @@ export default function CartPage() {
 
         {orders.map((row) => {
           return (
-            <Card sx={{ mt: 1, px: 3 }} key={row.id} elevation={0}>
+            <Card sx={{ mt: 1, px: 3, pt: 1 }} key={row.id} elevation={0}>
               <Grid container spacing={1}>
                 <Grid item xs={8}>
                   <small>
@@ -100,8 +118,23 @@ export default function CartPage() {
                   </small>
                 </Grid>
                 <Grid item xs={4}>
-                  <p style={{ textAlign: "right" }}>
+                  <div style={{ textAlign: "right" }}>
                     <strong>Total: US ${Number(row.amount).toFixed(2)}</strong>
+                    <Chip
+                      sx={{ m: 1, textTransform: "capitalize" }}
+                      label={row.status}
+                      color={ORDER_STATUS_COLORS[row.status]}
+                    />
+                    {row.status == ORDER_STATUS.DELIVERED && (
+                      <Button
+                        variant="contained"
+                        color="success"
+                        sx={{ ml: 2 }}
+                        onClick={() => confirmReceived(row)}
+                      >
+                        Confirm received
+                      </Button>
+                    )}
                     <Button
                       variant="outlined"
                       sx={{ ml: 2 }}
@@ -109,7 +142,7 @@ export default function CartPage() {
                     >
                       Remove
                     </Button>
-                  </p>
+                  </div>
                 </Grid>
               </Grid>
               {row.orderProducts.map((item) => {

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useNotifications } from "@toolpad/core/useNotifications";
 import BaseHeader from "../../components/BaseHeader.js";
+import BaseFooter from "../../components/BaseFooter.js";
 import {
   Box,
   CardMedia,
@@ -191,9 +192,8 @@ export default function ProdoctPage() {
             DESCRIPTION
           </Typography>
           <Divider />
-          <p>{product.description}</p>
           <div
-            style={{ marginBottom: "8px" }}
+            style={{ marginBottom: "10px" }}
             dangerouslySetInnerHTML={{
               __html: product.description2?.replace(/\n/g, "<br />"),
             }}
@@ -269,6 +269,7 @@ export default function ProdoctPage() {
           </Grid>
         </Card>
       </Box>
+      <BaseFooter />
     </div>
   );
 }

@@ -21,6 +21,7 @@ import ProdoctPage from "../pages/home/ProdoctPage.js";
 import CartPage from "../pages/home/CartPage.js";
 import CheckoutPage from "../pages/home/CheckoutPage.js";
 import OrderPage from "../pages/home/OrderPage.js";
+import NotificationPage from "../pages/home/NotificationPage.js";
 
 export default function InitRouter() {
   return (
@@ -76,6 +77,14 @@ export default function InitRouter() {
         element={
           <ProtectedRoutes>
             <OrderPage />
+          </ProtectedRoutes>
+        }
+      />
+      <Route
+        path="/notification"
+        element={
+          <ProtectedRoutes>
+            <NotificationPage />
           </ProtectedRoutes>
         }
       />

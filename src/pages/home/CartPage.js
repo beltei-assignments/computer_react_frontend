@@ -29,8 +29,17 @@ export default function CartPage() {
   const CartStore = useSelector((store) => store.Cart);
   const UserStore = useSelector((store) => store.User);
   const { carts } = CartStore;
-  const disabledCheckoutBtn = !carts.length;
+  const [disabledCheckoutBtn, setdisabledCheckoutBtn] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setdisabledCheckoutBtn(!carts.length);
+
+    const exceedCart = carts.find(({ product }) => !product.quantity);
+    if (exceedCart) {
+      setdisabledCheckoutBtn(true);
+    }
+  }, [carts]);
 
   useEffect(() => {
     if (!UserStore.token) return;
@@ -59,11 +68,12 @@ export default function CartPage() {
     setLoading(true);
     try {
       await dispatch.Cart.deleteCartById(id);
-      notifications.show("Your item is reomved", {
+      notifications.show("Your item is removed", {
         severity: "success",
         autoHideDuration: 4000,
       });
       await loadData();
+      await dispatch.User.fetchUser();
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -147,7 +157,7 @@ export default function CartPage() {
           </Box>
         )}
 
-        {carts.map((row, index) => {
+        {carts.map((row) => {
           return (
             <Card sx={{ mt: 1 }} key={row.id} elevation={0}>
               <Grid container spacing={1}>
@@ -216,7 +226,10 @@ export default function CartPage() {
                   <IconButton
                     size="small"
                     color="inherit"
-                    disabled={row.quantity === row.product.quantity}
+                    disabled={
+                      !row.product.quantity ||
+                      row.quantity === row.product.quantity
+                    }
                     onClick={() => onChangeItem(row, true)}
                   >
                     <AddCircleOutlineIcon />

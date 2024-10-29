@@ -269,7 +269,7 @@ export default function SettingPage() {
                         <strong>Phone number</strong>: {row.telephone}
                       </p>
                       <p>
-                        <strong>Company</strong>: {row.telephone}
+                        <strong>Company</strong>: {row.company}
                       </p>
                       <p>
                         <strong>Address 1</strong>: {row.address1}

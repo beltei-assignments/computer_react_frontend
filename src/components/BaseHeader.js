@@ -37,9 +37,13 @@ export default function BaseHeader({ children }) {
     "/forgot_password",
     "/auth/reset_password",
   ].includes(location.pathname);
-  const { user, items_in_cart, token, number_of_orders } = useSelector(
-    (store) => store.User
-  );
+  const {
+    user,
+    items_in_cart,
+    token,
+    number_of_orders,
+    number_of_notifications,
+  } = useSelector((store) => store.User);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -93,8 +97,12 @@ export default function BaseHeader({ children }) {
             </Tooltip>
 
             <Tooltip title="Notifications">
-              <IconButton size="large" color="inherit">
-                <Badge badgeContent={0} color="error">
+              <IconButton
+                size="large"
+                color="inherit"
+                onClick={() => goTo("/notification")}
+              >
+                <Badge badgeContent={number_of_notifications} color="error">
                   <NotificationsIcon />
                 </Badge>
               </IconButton>

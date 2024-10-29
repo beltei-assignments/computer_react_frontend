@@ -32,6 +32,7 @@ export default function CheckoutPage() {
   const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
   const [openAddressDialog, setOpenAddressDialog] = useState(false);
   const [openAddAddressDialog, setOpenAddAddressDialog] = useState(false);
+  const [disabledOrderBtn, setdisabledOrderBtn] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
   const [defaultAddress, setDefaultAddress] = useState(null);
 
@@ -46,6 +47,11 @@ export default function CheckoutPage() {
       0
     );
     setTotalAmount(amount);
+
+    const exceedCart = carts.find(({ product }) => !product.quantity);
+    if (exceedCart) {
+      setdisabledOrderBtn(true);
+    }
   }, [carts]);
   useEffect(() => {
     const address = addresses.find(({ is_default }) => is_default);
@@ -237,7 +243,10 @@ export default function CheckoutPage() {
                         <IconButton
                           size="small"
                           color="inherit"
-                          disabled={row.quantity === row.product.quantity}
+                          disabled={
+                            !row.product.quantity ||
+                            row.quantity === row.product.quantity
+                          }
                           onClick={() => onChangeItem(row, true)}
                         >
                           <AddCircleOutlineIcon />
@@ -279,7 +288,12 @@ export default function CheckoutPage() {
                 variant="contained"
                 fullWidth
                 sx={{ mt: 2 }}
-                disabled={!addresses.length || !carts.length || !defaultAddress}
+                disabled={
+                  disabledOrderBtn ||
+                  !addresses.length ||
+                  !carts.length ||
+                  !defaultAddress
+                }
                 onClick={handleOpenPaymentDialog}
               >
                 Place order

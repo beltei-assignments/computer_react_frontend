@@ -15,6 +15,7 @@ const User = {
     canSeeMenu: false,
     items_in_cart: 0,
     number_of_orders: 0,
+    number_of_notifications: 0,
   },
 
   reducers: {
@@ -38,16 +39,26 @@ const User = {
       state.number_of_orders = data;
       return { ...state };
     },
+    setNumberOfNotifications(state, data) {
+      state.number_of_notifications = data;
+      return { ...state };
+    },
   },
 
   effects: {
     async fetchUser() {
-      const { user, can_see_menus, items_in_cart, number_of_orders } =
-        await fetchUserAPI();
+      const {
+        user,
+        can_see_menus,
+        items_in_cart,
+        number_of_orders,
+        number_of_notifications,
+      } = await fetchUserAPI();
       this.setUser(user);
       this.setCanSeeMenu(can_see_menus);
       this.setItemsInCart(items_in_cart);
       this.setNumberOfOrders(number_of_orders);
+      this.setNumberOfNotifications(number_of_notifications);
     },
     async login(payload) {
       const data = await loginAPI(payload);
@@ -81,6 +92,7 @@ const User = {
       this.setCanSeeMenu(false);
       this.setItemsInCart(0);
       this.setNumberOfOrders(0);
+      this.setNumberOfNotifications(0);
     },
   },
 };

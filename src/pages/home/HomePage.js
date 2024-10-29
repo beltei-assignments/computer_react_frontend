@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import BaseHeader from "../../components/BaseHeader.js";
+import BaseFooter from "../../components/BaseFooter.js";
 import {
   Box,
   Card,
@@ -166,7 +167,7 @@ export default function HomePage() {
             HOT PRODUCTS
           </Typography>
 
-          {!products.length && (
+          {!loading && !products.length && (
             <Typography
               variant="body1"
               sx={{ color: "grey", textAlign: "center", mb: "40px" }}
@@ -238,11 +239,12 @@ export default function HomePage() {
           </Grid>
 
           {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
               <CircularProgress />
             </Box>
           )}
         </Box>
+        <BaseFooter />
       </div>
     </InfiniteScroll>
   );
