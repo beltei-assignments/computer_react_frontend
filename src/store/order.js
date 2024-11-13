@@ -36,6 +36,25 @@ const Order = {
             day: "numeric",
           }
         );
+
+        const estimateDate1 = new Date(order.created_at);
+        estimateDate1.setDate(estimateDate1.getDate() + 1);
+        const resultEstimateDate1 = estimateDate1.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+
+        const estimateDate2 = new Date(order.created_at);
+        estimateDate2.setDate(estimateDate2.getDate() + 3);
+        const resultEstimateDate2 = estimateDate2.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+
+        order.estimate_time = `${resultEstimateDate1} - ${resultEstimateDate2}`
+
         order.orderProducts.map(async ({ product }) => {
           if (product.productImages?.length) {
             product.image = await getImageByNameAPI(

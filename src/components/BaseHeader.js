@@ -21,7 +21,7 @@ import {
   ShoppingCartCheckout as ShoppingCartCheckoutIcon,
   Login as LoginIcon,
   LibraryBooks as LibraryBooksIcon,
-  FavoriteBorder as FavoriteBorderIcon,
+  StarBorder as StarBorderIcon,
   Settings,
   Logout,
 } from "@mui/icons-material";
@@ -43,6 +43,7 @@ export default function BaseHeader({ children }) {
     token,
     number_of_orders,
     number_of_notifications,
+    number_of_favourites,
   } = useSelector((store) => store.User);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -84,29 +85,32 @@ export default function BaseHeader({ children }) {
         <Box sx={{ flexGrow: 1 }} />
         {!isAuthenticationPage && (
           <Box>
-            <Tooltip title="My cart">
-              <IconButton
-                size="large"
-                color="inherit"
-                onClick={() => goTo("/cart")}
-              >
-                <Badge badgeContent={items_in_cart} color="error">
-                  <ShoppingCartCheckoutIcon />
-                </Badge>
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Notifications">
-              <IconButton
-                size="large"
-                color="inherit"
-                onClick={() => goTo("/notification")}
-              >
-                <Badge badgeContent={number_of_notifications} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
-            </Tooltip>
+            {token && (
+              <Tooltip title="My cart">
+                <IconButton
+                  size="large"
+                  color="inherit"
+                  onClick={() => goTo("/cart")}
+                >
+                  <Badge badgeContent={items_in_cart} color="error">
+                    <ShoppingCartCheckoutIcon />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+            )}
+            {token && (
+              <Tooltip title="Notifications">
+                <IconButton
+                  size="large"
+                  color="inherit"
+                  onClick={() => goTo("/notification")}
+                >
+                  <Badge badgeContent={number_of_notifications} color="error">
+                    <NotificationsIcon />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+            )}
 
             <Tooltip title={token ? "Account settings" : "Account login"}>
               <IconButton
@@ -120,9 +124,9 @@ export default function BaseHeader({ children }) {
               >
                 {token && <PersonOutlineIcon />}
                 {!token && <LoginIcon />}
+                {token && <span>Hi, {user.first_name}</span>}
               </IconButton>
             </Tooltip>
-            {token && <span>Hi, {user.first_name}</span>}
             <Menu
               anchorEl={anchorEl}
               id="account-menu"
@@ -160,6 +164,14 @@ export default function BaseHeader({ children }) {
               transformOrigin={{ horizontal: "right", vertical: "top" }}
               anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             >
+              <MenuItem onClick={() => goTo("/favourite")}>
+                <ListItemIcon>
+                  <Badge badgeContent={number_of_favourites} color="error">
+                    <StarBorderIcon fontSize="small" />
+                  </Badge>
+                </ListItemIcon>
+                My favourites
+              </MenuItem>
               <MenuItem onClick={() => goTo("/order")}>
                 <ListItemIcon>
                   <Badge badgeContent={number_of_orders} color="error">

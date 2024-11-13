@@ -23,6 +23,11 @@ const Cart = {
       state.carts[index] = data;
       return { ...state };
     },
+    setQuantity(state, data) {
+      const index = state.carts.findIndex(({ id }) => id === data.id);
+      state.carts[index] = data;
+      return { ...state };
+    },
   },
 
   effects: {

@@ -18,15 +18,19 @@ import {
   IconButton,
   CircularProgress,
 } from "@mui/material";
-import { Search as SearchIcon } from "@mui/icons-material";
+import {
+  Search as SearchIcon,
+  Star as StarIcon,
+  Clear as ClearIcon,
+} from "@mui/icons-material";
 import InfiniteScroll from "react-infinite-scroll-component";
-
 let currentPage = 1;
 
 export default function HomePage() {
   const dispatch = useDispatch();
   const ProductStore = useSelector((store) => store.Product);
   const CategoryStore = useSelector((store) => store.Category);
+  const UserStore = useSelector((store) => store.User);
   const { products } = ProductStore;
   const { categories } = CategoryStore;
   const [tab, setTab] = useState(0);
@@ -35,6 +39,7 @@ export default function HomePage() {
   const [categoryId, setCategoryId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [showBanner, setShowBanner] = useState(true);
 
   useEffect(() => {
     loadData(); // eslint-disable-next-line
@@ -44,9 +49,11 @@ export default function HomePage() {
   }, [products, totalCount]);
 
   async function loadData() {
+    setLoading(true);
     currentPage = 1;
-    await dispatch.Category.getCategories();
+    await dispatch.Category.getCategories({ hasProducts: true });
     await loadProducts({});
+    setLoading(false);
   }
   async function loadProducts({
     name = null,
@@ -60,10 +67,11 @@ export default function HomePage() {
       } = await dispatch.Product.getProducts({
         isScrollMore,
         page: currentPage,
-        limit: 4,
+        limit: 8,
         name,
         include_product_images: true,
         ...(fk_category_id && { fk_category_id }),
+        ...(UserStore.token && { fk_user_id: UserStore.user.id }),
       });
       setTotalCount(count);
       currentPage += 1;
@@ -76,9 +84,17 @@ export default function HomePage() {
   async function search() {
     setTab(0);
     setCategoryId(null);
-    // setTotalCount(0);
+    setShowBanner(false);
     currentPage = 1;
     await loadProducts({ name: searchText });
+  }
+  async function clearSearch() {
+    setSearchText("");
+    setTab(0);
+    setCategoryId(null);
+    setShowBanner(true);
+    currentPage = 1;
+    await loadProducts({ name: null });
   }
   async function changeTab(_, v) {
     setTab(v);
@@ -113,7 +129,7 @@ export default function HomePage() {
           <FormControl
             variant="outlined"
             size="small"
-            style={{ background: "white", width: "500px" }}
+            style={{ background: "white", width: "500px", borderRadius: "4px" }}
           >
             <OutlinedInput
               type="text"
@@ -122,7 +138,18 @@ export default function HomePage() {
               onChange={handleChangeSearchText}
               endAdornment={
                 <InputAdornment position="end">
-                  <IconButton edge="end" onClick={search}>
+                  <IconButton
+                    edge="end"
+                    disabled={!searchText}
+                    onClick={clearSearch}
+                  >
+                    <ClearIcon />
+                  </IconButton>
+                  <IconButton
+                    edge="end"
+                    disabled={!searchText}
+                    onClick={search}
+                  >
                     <SearchIcon />
                   </IconButton>
                 </InputAdornment>
@@ -130,9 +157,13 @@ export default function HomePage() {
             />
           </FormControl>
         </BaseHeader>
-        <div className="banner-container">
-          <div className="banner"></div>
-        </div>
+
+        {showBanner && (
+          <div className="banner-container">
+            <div className="banner"></div>
+          </div>
+        )}
+
         <Box sx={{ mx: 3, my: 2 }}>
           <div
             style={{
@@ -147,7 +178,7 @@ export default function HomePage() {
               scrollButtons={true}
               aria-label="scrollable prevent tabs example"
             >
-              {[{ name: "POPULAR" }, ...categories].map((row, index) => {
+              {[{ name: "EXPLOR" }, ...categories].map((row, index) => {
                 return <Tab label={row.name} key={index} value={row.id} />;
               })}
             </Tabs>
@@ -170,7 +201,12 @@ export default function HomePage() {
           {!loading && !products.length && (
             <Typography
               variant="body1"
-              sx={{ color: "grey", textAlign: "center", mb: "40px" }}
+              sx={{
+                color: "grey",
+                textAlign: "center",
+                mb: "40px",
+                marginBottom: "25rem",
+              }}
             >
               {!products.length && searchText
                 ? "Your result search is no available products yet"
@@ -188,6 +224,7 @@ export default function HomePage() {
                       height: "400px",
                       p: 2,
                       cursor: "pointer",
+                      position: "relative",
                     }}
                     onClick={() => goToProduct(row)}
                   >
@@ -232,6 +269,31 @@ export default function HomePage() {
                         {row.description}
                       </Typography>
                     </CardContent>
+
+                    <Typography
+                      variant="body1"
+                      sx={(theme) => ({
+                        color: theme.palette.primary.main,
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        padding: "4px 8px",
+                      })}
+                    >
+                      ${Number(row.price).toFixed(2)}
+                    </Typography>
+
+                    {!!row.favourite && (
+                      <StarIcon
+                        sx={(theme) => ({
+                          color: theme.palette.primary.main,
+                          position: "absolute",
+                          bottom: 0,
+                          right: 0,
+                          padding: "4px 8px",
+                        })}
+                      />
+                    )}
                   </Card>
                 </Grid>
               );
@@ -239,7 +301,14 @@ export default function HomePage() {
           </Grid>
 
           {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: 4,
+                mb: "24rem",
+              }}
+            >
               <CircularProgress />
             </Box>
           )}

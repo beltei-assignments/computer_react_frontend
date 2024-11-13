@@ -17,11 +17,12 @@ import CategoryEditPage from "../pages/admin/category/CategoryEditPage.js";
 
 // User
 import HomePage from "../pages/home/HomePage.js";
-import ProdoctPage from "../pages/home/ProdoctPage.js";
+import ProductPage from "../pages/home/ProductPage.js";
 import CartPage from "../pages/home/CartPage.js";
 import CheckoutPage from "../pages/home/CheckoutPage.js";
 import OrderPage from "../pages/home/OrderPage.js";
 import NotificationPage from "../pages/home/NotificationPage.js";
+import FavouritePage from "../pages/home/FavouritePage.js";
 
 export default function InitRouter() {
   return (
@@ -52,7 +53,7 @@ export default function InitRouter() {
         path="/item/:id"
         element={
           <ProtectedRoutes>
-            <ProdoctPage />
+            <ProductPage />
           </ProtectedRoutes>
         }
       />
@@ -85,6 +86,14 @@ export default function InitRouter() {
         element={
           <ProtectedRoutes>
             <NotificationPage />
+          </ProtectedRoutes>
+        }
+      />
+      <Route
+        path="/favourite"
+        element={
+          <ProtectedRoutes>
+            <FavouritePage />
           </ProtectedRoutes>
         }
       />

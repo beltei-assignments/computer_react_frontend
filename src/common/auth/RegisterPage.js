@@ -49,8 +49,9 @@ export default function RegisterPage() {
       navigate("/login");
     } catch ({ status, response }) {
       setLoading(false);
-      if (status === 412 && response.data) {
-        const message = Object.values(response.data.message)[0];
+      if (status != 500 && response.data) {
+        const message =
+          response.data.message || Object.values(response.data.message)[0];
         return notifications.show(message, {
           severity: "error",
           autoHideDuration: 3000,

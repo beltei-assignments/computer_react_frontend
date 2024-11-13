@@ -128,7 +128,7 @@ export default function AddressDialog({ openAddressDialog, onClose }) {
                   <div key={address.id}>
                     <FormControlLabel
                       value={address.id}
-                      sx={{ width: "90%" }}
+                      sx={{ width: "85%" }}
                       control={<Radio />}
                       slots={{
                         typography: () => (

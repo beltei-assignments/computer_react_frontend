@@ -17,7 +17,7 @@ const options = {
 };
 
 export default function PaymentDialog({ openAddressDialog, onClose }) {
-  const stripePromise = loadStripe();
+  const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_API_PK);
 
   async function handleSubmit(event) {
     event.preventDefault();

@@ -16,6 +16,7 @@ Before you begin, ensure you have met the following requirements:
 
 Location copy file from `.env.example` to `.env`
 - `REACT_APP_ROOT_API`: `"http://127.0.0.1:8000/api"`.
+- `REACT_APP_STRIPE_API_PK`: `"your_key"`.
 
 
 **Following commands**

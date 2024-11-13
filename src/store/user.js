@@ -16,6 +16,7 @@ const User = {
     items_in_cart: 0,
     number_of_orders: 0,
     number_of_notifications: 0,
+    number_of_favourites: 0,
   },
 
   reducers: {
@@ -43,6 +44,10 @@ const User = {
       state.number_of_notifications = data;
       return { ...state };
     },
+    setNumberOfFavourites(state, data) {
+      state.number_of_favourites = data;
+      return { ...state };
+    },
   },
 
   effects: {
@@ -53,12 +58,14 @@ const User = {
         items_in_cart,
         number_of_orders,
         number_of_notifications,
+        number_of_favourites,
       } = await fetchUserAPI();
       this.setUser(user);
       this.setCanSeeMenu(can_see_menus);
       this.setItemsInCart(items_in_cart);
       this.setNumberOfOrders(number_of_orders);
       this.setNumberOfNotifications(number_of_notifications);
+      this.setNumberOfFavourites(number_of_favourites);
     },
     async login(payload) {
       const data = await loginAPI(payload);
@@ -93,6 +100,7 @@ const User = {
       this.setItemsInCart(0);
       this.setNumberOfOrders(0);
       this.setNumberOfNotifications(0);
+      this.setNumberOfFavourites(0);
     },
   },
 };

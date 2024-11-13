@@ -112,6 +112,10 @@ export default function CartPage() {
                   </small>
                   <br />
                   <small>
+                    <strong>Estimate time</strong>: {row.estimate_time}
+                  </small>
+                  <br />
+                  <small>
                     <strong>Shipping address:</strong> {row.contact_name}{" "}
                     {row.telephone}, {row.address1} / {row.address2},{" "}
                     {row.region}, {row.post_code}, {row.city}, {row.country}
@@ -125,11 +129,11 @@ export default function CartPage() {
                       label={row.status}
                       color={ORDER_STATUS_COLORS[row.status]}
                     />
-                    {row.status == ORDER_STATUS.DELIVERED && (
+                    {row.status === ORDER_STATUS.DELIVERED && (
                       <Button
                         variant="contained"
                         color="success"
-                        sx={{ ml: 2 }}
+                        sx={{ ml: 2, mb: 1 }}
                         onClick={() => confirmReceived(row)}
                       >
                         Confirm received
@@ -137,7 +141,7 @@ export default function CartPage() {
                     )}
                     <Button
                       variant="outlined"
-                      sx={{ ml: 2 }}
+                      sx={{ ml: 2, mb: 1 }}
                       onClick={() => onRemveOrder(row)}
                     >
                       Remove

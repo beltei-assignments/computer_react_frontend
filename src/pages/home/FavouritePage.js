@@ -14,32 +14,25 @@ import {
   IconButton,
   Typography,
   Card,
+  Checkbox,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
   AddCircleOutline as AddCircleOutlineIcon,
   RemoveCircleOutline as RemoveCircleOutlineIcon,
+  ShoppingCartCheckout as ShoppingCartCheckoutIcon,
 } from "@mui/icons-material";
 
-export default function CartPage() {
+export default function FavouritePage() {
   const navigate = useNavigate();
   const notifications = useNotifications();
   const dialogs = useDialogs();
   const dispatch = useDispatch();
-  const CartStore = useSelector((store) => store.Cart);
+  const FavouriteStore = useSelector((store) => store.Favourite);
   const UserStore = useSelector((store) => store.User);
-  const { carts } = CartStore;
-  const [disabledCheckoutBtn, setdisabledCheckoutBtn] = useState(false);
+  const { favourites } = FavouriteStore;
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setdisabledCheckoutBtn(!carts.length);
-
-    const exceedCart = carts.find(({ product }) => !product.quantity);
-    if (exceedCart) {
-      setdisabledCheckoutBtn(true);
-    }
-  }, [carts]);
+  const [favouritesToAction, setFavouritesToAction] = useState([]);
 
   useEffect(() => {
     if (!UserStore.token) return;
@@ -49,15 +42,36 @@ export default function CartPage() {
 
   async function loadData() {
     setLoading(true);
-    await dispatch.Cart.getCarts();
+    await dispatch.Favourite.getFavourites();
     setLoading(false);
   }
   function goTo(path) {
     return navigate(path);
   }
-  async function onDeleteItem(id) {
+  async function addToCart() {
+    const favouritesSelected = favourites.filter(({ id }) =>
+      favouritesToAction.includes(id)
+    );
+
+    for await (const {
+      fk_product_id,
+      quantity_to_cart,
+    } of favouritesSelected) {
+      await dispatch.Cart.createCart({
+        fk_product_id,
+        quantity: quantity_to_cart,
+      });
+    }
+
+    notifications.show("Your favourite(s) is added to cart", {
+      severity: "success",
+      autoHideDuration: 4000,
+    });
+    await dispatch.User.fetchUser();
+  }
+  async function onDeleteItem() {
     const confirmed = await dialogs.confirm(
-      "Are you sure to remove your item?",
+      "Are you sure to remove your favourite(s)?",
       {
         okText: "Yes",
         cancelText: "No",
@@ -67,11 +81,12 @@ export default function CartPage() {
 
     setLoading(true);
     try {
-      await dispatch.Cart.deleteCartById(id);
-      notifications.show("Your item is removed", {
+      await dispatch.Favourite.deleteFavourites(favouritesToAction);
+      notifications.show("Your favourite(s) is removed", {
         severity: "success",
         autoHideDuration: 4000,
       });
+      setFavouritesToAction([]);
       await loadData();
       await dispatch.User.fetchUser();
       setLoading(false);
@@ -80,18 +95,25 @@ export default function CartPage() {
       console.log(error);
     }
   }
-  async function onChangeQuantity(item, isPlusQty) {
-    try {
-      const quantity = isPlusQty ? item.quantity + 1 : item.quantity - 1;
-
-      item.quantity = quantity;
-      dispatch.Cart.setQuantity(item);
-
-      const payload = { quantity };
-      await dispatch.Cart.updateCartById({ id: item.id, payload });
-    } catch (error) {
-      console.log(error);
+  function onCheck({ id }, isCheck) {
+    const newList = [...favouritesToAction];
+    if (isCheck) {
+      newList.push(id);
+    } else {
+      const index = newList.findIndex((item) => item === id);
+      newList.splice(index, 1);
     }
+
+    setFavouritesToAction(newList);
+  }
+  async function onChangeQuatity(item, isIncrement) {
+    if (isIncrement) {
+      item.quantity_to_cart += 1;
+    } else {
+      item.quantity_to_cart -= 1;
+    }
+
+    dispatch.Favourite.setFavourite(item);
   }
 
   return (
@@ -99,25 +121,35 @@ export default function CartPage() {
       <BaseHeader />
       <BaseLoading loading={loading} />
       <Box sx={{ mx: 24, my: 3 }}>
-        {carts.length > 0 && (
+        {favourites.length > 0 && (
           <div style={{ marginBottom: 20, textAlign: "right" }}>
             <Button
-              variant="contained"
-              onClick={() => goTo("/checkout")}
-              disabled={disabledCheckoutBtn}
+              variant="outlined"
+              sx={{ mr: 1 }}
+              startIcon={<DeleteIcon />}
+              disabled={!favouritesToAction.length}
+              onClick={onDeleteItem}
             >
-              Check out
+              Delete
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<ShoppingCartCheckoutIcon />}
+              disabled={!favouritesToAction.length}
+              onClick={addToCart}
+            >
+              Add to cart
             </Button>
           </div>
         )}
 
-        {!carts.length && !loading && (
+        {!favourites.length && !loading && (
           <div style={{ textAlign: "center" }}>
             <Typography
               variant="body1"
               sx={{ color: "grey", textAlign: "center", mb: "40px" }}
             >
-              You don't have items in cart yet, please go to add one.
+              You don't have favourite yet, please go to add one.
             </Typography>
 
             <Button variant="outlined" onClick={() => goTo("/")}>
@@ -126,15 +158,21 @@ export default function CartPage() {
           </div>
         )}
 
-        {carts.map((row) => {
+        {favourites.map((row) => {
           return (
             <Card key={row.id} elevation={0}>
               <Grid container spacing={1}>
                 <Grid
                   item
                   xs={2}
-                  sx={{ display: "flex", justifyContent: "center" }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    m: 1,
+                  }}
                 >
+                  <Checkbox onChange={(e) => onCheck(row, e.target.checked)} />
                   {!row.product.image && (
                     <div style={{ width: 100, marginTop: 4 }}>
                       <Skeleton
@@ -153,7 +191,6 @@ export default function CartPage() {
                       component="img"
                       height="104"
                       alt="product png"
-                      sx={{ m: 1 }}
                       src={row.product.image}
                     />
                   )}
@@ -167,7 +204,7 @@ export default function CartPage() {
                 </Grid>
                 <Grid
                   item
-                  xs={1}
+                  xs={2}
                   sx={{ display: "flex", alignItems: "center" }}
                 >
                   {row.product.category.name}
@@ -185,32 +222,6 @@ export default function CartPage() {
                   xs={1}
                   sx={{ display: "flex", alignItems: "center" }}
                 >
-                  <IconButton
-                    size="small"
-                    color="inherit"
-                    disabled={row.quantity === 1}
-                    onClick={() => onChangeQuantity(row, false)}
-                  >
-                    <RemoveCircleOutlineIcon />
-                  </IconButton>
-                  <span style={{ fontWeight: "bold" }}>{row.quantity}</span>
-                  <IconButton
-                    size="small"
-                    color="inherit"
-                    disabled={
-                      !row.product.quantity ||
-                      row.quantity === row.product.quantity
-                    }
-                    onClick={() => onChangeQuantity(row, true)}
-                  >
-                    <AddCircleOutlineIcon />
-                  </IconButton>
-                </Grid>
-                <Grid
-                  item
-                  xs={1}
-                  sx={{ display: "flex", alignItems: "center" }}
-                >
                   ${Number(row.product.price).toFixed(2)}
                 </Grid>
                 <Grid
@@ -218,21 +229,27 @@ export default function CartPage() {
                   xs={1}
                   sx={{ display: "flex", alignItems: "center" }}
                 >
-                  <span style={{ fontWeight: "bold" }}>
-                    ${Number(row.quantity * row.product.price).toFixed(2)}
-                  </span>
-                </Grid>
-                <Grid
-                  item
-                  xs={1}
-                  sx={{ display: "flex", alignItems: "center" }}
-                >
                   <IconButton
                     size="small"
-                    color="error"
-                    onClick={() => onDeleteItem(row.id)}
+                    color="inherit"
+                    disabled={row.quantity_to_cart <= 1}
+                    onClick={() => onChangeQuatity(row, false)}
                   >
-                    <DeleteIcon />
+                    <RemoveCircleOutlineIcon />
+                  </IconButton>
+                  <span style={{ fontWeight: "bold" }}>
+                    {row.quantity_to_cart}
+                  </span>
+                  <IconButton
+                    size="small"
+                    color="inherit"
+                    disabled={
+                      !row.product.quantity ||
+                      row.quantity_to_cart === row.product.quantity
+                    }
+                    onClick={() => onChangeQuatity(row, true)}
+                  >
+                    <AddCircleOutlineIcon />
                   </IconButton>
                 </Grid>
               </Grid>

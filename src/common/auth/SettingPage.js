@@ -18,6 +18,7 @@ import {
 import BaseHeader from "../../components/BaseHeader.js";
 import PersonalInfoDialog from "../components/PersonalInfoDialog.js";
 import AddAddressDialog from "../../components/checkout/AddAddressDialog.js";
+import BaseLoading from "../../components/BaseLoading.js";
 
 const IOSSwitch = styled((props) => (
   <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
@@ -80,6 +81,7 @@ export default function SettingPage() {
   const { addresses } = AddressStore;
   const [openDialog, setOpenDialog] = useState(false);
   const [openAddressDialog, setOpenAdressDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState(null);
   const [tab, setTab] = useState(0);
   const gender = GENDERS.find(({ value }) => value == user.gender);
@@ -89,7 +91,9 @@ export default function SettingPage() {
   }, []);
 
   async function loadAdress() {
+    setLoading(true);
     await dispatch.Address.fetchAddresses();
+    setLoading(false);
   }
   function handleDialog() {
     setOpenDialog(!openDialog);
@@ -132,16 +136,13 @@ export default function SettingPage() {
           is_default: !is_default,
         },
       });
-      notifications.show("Address is updated successfully", {
-        severity: "success",
-        autoHideDuration: 4000,
-      });
       await loadAdress();
     } catch {}
   }
 
   return (
     <div>
+      <BaseLoading loading={loading} />
       <PersonalInfoDialog
         open={openDialog}
         user={user}

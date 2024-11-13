@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useNotifications } from "@toolpad/core/useNotifications";
 import BaseHeader from "../../components/BaseHeader.js";
 import BaseFooter from "../../components/BaseFooter.js";
@@ -15,25 +15,31 @@ import {
   Divider,
   CardContent,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import {
   AddCircleOutline as AddCircleOutlineIcon,
   RemoveCircleOutline as RemoveCircleOutlineIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon,
 } from "@mui/icons-material";
 
-export default function ProdoctPage() {
+export default function ProductPage() {
   const { id: productId } = useParams();
   const notifications = useNotifications();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const ProductStore = useSelector((store) => store.Product);
+  const UserStore = useSelector((store) => store.User);
   const [quantityToCart, setQuantityToCart] = useState(1);
   const { product, products } = ProductStore;
   const [selectedImageId, setSelectdImageId] = useState(1);
   const [selectedImage, setSelectdImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadData(); // eslint-disable-next-line
-  }, []);
+  }, [UserStore.user]);
   useEffect(() => {
     if (!product.fk_category_id) return;
 
@@ -46,11 +52,19 @@ export default function ProdoctPage() {
       not_include_ids: JSON.stringify([product.id]),
       page: 1,
       limit: 12,
+      ...(UserStore.token && { fk_user_id: UserStore.user.id }),
     });
   }, [product]);
 
   async function loadData() {
-    await dispatch.Product.getProductById(productId);
+    setLoading(true);
+    await dispatch.Product.getProductById({
+      id: productId,
+      params: {
+        ...(UserStore.token && { fk_user_id: UserStore.user.id }),
+      },
+    });
+    setLoading(false);
   }
   function goToProduct({ id }) {
     return window.open(`/item/${id}`, "_blank");
@@ -58,16 +72,40 @@ export default function ProdoctPage() {
   async function addToCart() {
     if (!product.id) return;
 
+    if (!UserStore.token) return navigate("/login");
+
     await dispatch.Cart.createCart({
       fk_product_id: product.id,
       quantity: quantityToCart,
     });
     setQuantityToCart(1);
-    notifications.show("Product have been added to cart", {
+    notifications.show("Product is added to cart", {
       severity: "success",
       autoHideDuration: 4000,
     });
     await dispatch.User.fetchUser();
+  }
+  async function onClickFavourite(product) {
+    if (loading) return;
+
+    if (!UserStore.token) return navigate("/login");
+
+    const { favourite, id } = product;
+    setLoading(true);
+    try {
+      if (favourite) {
+        dispatch.Product.changeFavourite(false);
+        await dispatch.Favourite.deleteFavouriteById(id);
+      } else {
+        dispatch.Product.changeFavourite(true);
+        await dispatch.Favourite.createFavourite({ fk_product_id: id });
+      }
+      await dispatch.User.fetchUser();
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
   }
   function onChangeQuantity(isIncrement) {
     if (isIncrement) {
@@ -84,7 +122,7 @@ export default function ProdoctPage() {
   return (
     <div>
       <BaseHeader />
-      <Box sx={{ mx: 24, my: 3 }}>
+      <Box sx={{ mx: 12, my: 3 }}>
         <Card sx={{ p: 2 }} elevation={0}>
           <Grid container spacing={1}>
             <Grid item xs={5}>
@@ -151,7 +189,29 @@ export default function ProdoctPage() {
                 ${product.price && Number(product.price).toFixed(2)}
               </Typography>
               <Divider />
-              <div style={{ marginTop: "12px", display: "flex" }}>
+              <Tooltip
+                title={
+                  !product.favourite
+                    ? "Add to favourite"
+                    : "Remove from favourite"
+                }
+              >
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  onClick={() => onClickFavourite(product)}
+                >
+                  {!!product.favourite && (
+                    <StarIcon
+                      sx={(theme) => ({
+                        color: theme.palette.primary.main,
+                      })}
+                    />
+                  )}
+                  {!product.favourite && <StarBorderIcon />}
+                </IconButton>
+              </Tooltip>
+              <div style={{ marginTop: "4px", display: "flex" }}>
                 <div>
                   <IconButton
                     size="small"
@@ -218,6 +278,7 @@ export default function ProdoctPage() {
                       p: 2,
                       background: "none",
                       cursor: "pointer",
+                      position: "relative",
                     }}
                     onClick={() => goToProduct(row)}
                   >
@@ -249,7 +310,7 @@ export default function ProdoctPage() {
                       />
                     )}
 
-                    <CardContent style={{ textAlign: "center" }}>
+                    <CardContent sx={{ textAlign: "center" }}>
                       <Typography
                         gutterBottom
                         variant="h6"
@@ -262,6 +323,30 @@ export default function ProdoctPage() {
                         {row.description}
                       </Typography>
                     </CardContent>
+                    <Typography
+                      variant="body1"
+                      sx={(theme) => ({
+                        color: theme.palette.primary.main,
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        padding: "4px 8px",
+                      })}
+                    >
+                      ${Number(row.price).toFixed(2)}
+                    </Typography>
+
+                    {!!row.favourite && (
+                      <StarIcon
+                        sx={(theme) => ({
+                          color: theme.palette.primary.main,
+                          position: "absolute",
+                          bottom: 0,
+                          right: 0,
+                          padding: "4px 8px",
+                        })}
+                      />
+                    )}
                   </Card>
                 </Grid>
               );
@@ -269,7 +354,7 @@ export default function ProdoctPage() {
           </Grid>
         </Card>
       </Box>
-      <BaseFooter />
+      {!loading && <BaseFooter />}
     </div>
   );
 }

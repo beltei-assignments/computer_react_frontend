@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNotifications } from "@toolpad/core/useNotifications";
 import Button from "@mui/material/Button";
 import BaseHeader from "../../components/BaseHeader.js";
 import AddressDialog from "../../components/checkout/AddressDialog.js";
@@ -22,7 +21,6 @@ import {
 } from "@mui/icons-material";
 
 export default function CheckoutPage() {
-  const notifications = useNotifications();
   const dispatch = useDispatch();
   const CartStore = useSelector((store) => store.Cart);
   const UserStore = useSelector((store) => store.User);
@@ -42,11 +40,7 @@ export default function CheckoutPage() {
     loadData(); // eslint-disable-next-line
   }, []);
   useEffect(() => {
-    const amount = carts.reduce(
-      (acc, { quantity, product }) => acc + quantity * Number(product.price),
-      0
-    );
-    setTotalAmount(amount);
+    computeTotalAmount();
 
     const exceedCart = carts.find(({ product }) => !product.quantity);
     if (exceedCart) {
@@ -69,22 +63,29 @@ export default function CheckoutPage() {
   function handleOpenAddAddressDialog() {
     setOpenAddAddressDialog(!openAddAddressDialog);
   }
+  function computeTotalAmount() {
+    const amount = carts.reduce(
+      (acc, { quantity, product }) => acc + quantity * Number(product.price),
+      0
+    );
+    setTotalAmount(amount);
+  }
   async function loadData() {
     await dispatch.Cart.getCarts();
   }
   async function loadAdress() {
     await dispatch.Address.fetchAddresses();
   }
-  async function onChangeItem(item, isPlusQty) {
+  async function onChangeQuantity(item, isPlusQty) {
     try {
       const quantity = isPlusQty ? item.quantity + 1 : item.quantity - 1;
+
+      item.quantity = quantity;
+      dispatch.Cart.setQuantity(item);
+      computeTotalAmount();
+
       const payload = { quantity };
       await dispatch.Cart.updateCartById({ id: item.id, payload });
-      notifications.show("Your quantity is changed", {
-        severity: "success",
-        autoHideDuration: 4000,
-      });
-      await loadData();
     } catch (error) {
       console.log(error);
     }
@@ -227,13 +228,23 @@ export default function CheckoutPage() {
                       <Grid
                         item
                         xs={2}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        ${Number(row.product.price).toFixed(2)}
+                      </Grid>
+                      <Grid
+                        item
+                        xs={2}
                         sx={{ display: "flex", alignItems: "center" }}
                       >
                         <IconButton
                           size="small"
                           color="inherit"
                           disabled={row.quantity === 1}
-                          onClick={() => onChangeItem(row, false)}
+                          onClick={() => onChangeQuantity(row, false)}
                         >
                           <RemoveCircleOutlineIcon />
                         </IconButton>
@@ -247,20 +258,10 @@ export default function CheckoutPage() {
                             !row.product.quantity ||
                             row.quantity === row.product.quantity
                           }
-                          onClick={() => onChangeItem(row, true)}
+                          onClick={() => onChangeQuantity(row, true)}
                         >
                           <AddCircleOutlineIcon />
                         </IconButton>
-                      </Grid>
-                      <Grid
-                        item
-                        xs={1}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        ${Number(row.product.price).toFixed(2)}
                       </Grid>
                     </Grid>
                     <Divider />

@@ -40,6 +40,10 @@ const Product = {
       state.product = data;
       return { ...state };
     },
+    changeFavourite(state, data) {
+      state.product.favourite = data;
+      return { ...state };
+    },
   },
 
   effects: {
@@ -63,8 +67,8 @@ const Product = {
 
       return data;
     },
-    async getProductById(id) {
-      const data = await getProductByIdAPI(id);
+    async getProductById({ id, params }) {
+      const data = await getProductByIdAPI(id, params);
 
       if (data.data.productImages?.length) {
         data.data.image = `${baseApiURL}/images/${data.data.productImages[0].name}`;

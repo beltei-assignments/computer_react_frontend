@@ -4,8 +4,8 @@ export async function fetchProductsAPI(params) {
   return http.get("/products", { params });
 }
 
-export async function getProductByIdAPI(id) {
-  return http.get(`/products/${id}`);
+export async function getProductByIdAPI(id, params) {
+  return http.get(`/products/${id}`, { params });
 }
 
 export async function createProductAPI(payload) {

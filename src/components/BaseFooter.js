@@ -21,9 +21,10 @@ export default function BaseFooter() {
             <img src={logo} style={{ height: "100px" }} />
           </Grid>
           <Grid item xs={4}>
-            <h3>Email Contacts</h3>
-            <p>sales@publicofgamer.com</p>
-            <p>supports@publicofgamer.com</p>
+            <h3>Contacts</h3>
+            <p>Phone: +855 66 6666 444</p>
+
+            <p>Email: supports@publicofgamer.com</p>
           </Grid>
           <Grid item xs={3}>
             <h3>Shop Address</h3>
