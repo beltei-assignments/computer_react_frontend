@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useNotifications } from "@toolpad/core/useNotifications";
 import Button from "@mui/material/Button";
 import BaseHeader from "../../components/BaseHeader.js";
 import AddressDialog from "../../components/checkout/AddressDialog.js";
 import AddAddressDialog from "../../components/checkout/AddAddressDialog.js";
 import PaymentDialog from "../../components/PaymentDialog.js";
+import { checkoutPaymentAPI } from "../../api/payment.js";
 import {
   Box,
   CardMedia,
@@ -19,6 +22,7 @@ import {
   AddCircleOutline as AddCircleOutlineIcon,
   RemoveCircleOutline as RemoveCircleOutlineIcon,
 } from "@mui/icons-material";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 export default function CheckoutPage() {
   const dispatch = useDispatch();
@@ -33,6 +37,9 @@ export default function CheckoutPage() {
   const [disabledOrderBtn, setdisabledOrderBtn] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
   const [defaultAddress, setDefaultAddress] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const notifications = useNotifications();
 
   useEffect(() => {
     if (!UserStore.token) return;
@@ -54,8 +61,49 @@ export default function CheckoutPage() {
     }
   }, [addresses]);
 
-  function handleOpenPaymentDialog() {
-    setOpenPaymentDialog(!openPaymentDialog);
+  async function handleOpenPaymentDialog() {
+    // setOpenPaymentDialog(!openPaymentDialog);
+
+    setLoading(true);
+    try {
+      const items = carts.map(({ fk_product_id, quantity, product }) => ({
+        fk_product_id,
+        quantity,
+        price: product.price,
+      }));
+      const address = addresses.find(({ is_default }) => is_default);
+      const payload = JSON.stringify({
+        currency: "usd",
+        paymentMethodType: "card",
+        items,
+        address,
+      });
+      await checkoutPaymentAPI(payload);
+
+      setLoading(false);
+
+      // if (success) {
+      //   notifications.show("You have ordered successfully", {
+      //     severity: "success",
+      //   });
+      //   setLoading(false);
+      //   await dispatch.User.fetchUser();
+      //   navigate("/order");
+      // }
+    } catch (error) {
+      setLoading(false);
+      if (error.status !== 500) {
+        return notifications.show(error.response.data?.message, {
+          severity: "error",
+          autoHideDuration: 4000,
+        });
+      }
+
+      notifications.show("Something went wrong while ordering", {
+        severity: "error",
+        autoHideDuration: 4000,
+      });
+    }
   }
   function handleOpenAddressDialog() {
     setOpenAddressDialog(!openAddressDialog);
@@ -94,12 +142,12 @@ export default function CheckoutPage() {
   return (
     <div>
       <BaseHeader />
-      <PaymentDialog
+      {/* <PaymentDialog
         openAddressDialog={openPaymentDialog}
         onClose={() => {
           handleOpenPaymentDialog();
         }}
-      />
+      /> */}
       <AddressDialog
         openAddressDialog={openAddressDialog}
         onClose={() => {
@@ -285,7 +333,7 @@ export default function CheckoutPage() {
               <Typography variant="body1">
                 Total US: <strong>${Number(totalAmount).toFixed(2)}</strong>
               </Typography>
-              <Button
+              <LoadingButton
                 variant="contained"
                 fullWidth
                 sx={{ mt: 2 }}
@@ -295,10 +343,11 @@ export default function CheckoutPage() {
                   !carts.length ||
                   !defaultAddress
                 }
+                loading={loading}
                 onClick={handleOpenPaymentDialog}
               >
                 Place order
-              </Button>
+              </LoadingButton>
             </Card>
           </Grid>
         </Grid>

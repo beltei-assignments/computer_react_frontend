@@ -7,7 +7,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
-import CheckoutForm from "../lib/components/CheckoutForm.js";
+// import CheckoutForm from "../lib/components/CheckoutForm.js";
 
 const options = {
   mode: "payment",
@@ -43,11 +43,11 @@ export default function PaymentDialog({ openAddressDialog, onClose }) {
         </IconButton>
         <DialogContent>
           <Elements stripe={stripePromise} options={options}>
-            <CheckoutForm
+            {/* <CheckoutForm
               handleSubmit={(event) => {
                 handleSubmit(event);
               }}
-            />
+            /> */}
           </Elements>
         </DialogContent>
       </Dialog>
